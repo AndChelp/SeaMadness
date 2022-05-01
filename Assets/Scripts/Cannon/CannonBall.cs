@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Cannon
 {
-    public class CannonBallController : MonoBehaviour
+    public class CannonBall : MonoBehaviour
     {
         public int damageAmount = 10;
 
