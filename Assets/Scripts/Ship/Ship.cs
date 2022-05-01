@@ -12,13 +12,12 @@ namespace Ship
     public class Ship : NetworkBehaviour, Damagable
     {
         private Camera _camera;
-        private Canvas _canvas;
         private Rigidbody _rb;
         [SyncVar] private int _currentHealth = 100;
 
         public float acceleration = 1500f;
 
-        public List<CannonController> cannons;
+        public List<Cannon.Cannon> cannons;
 
         public GameObject aim;
 
@@ -109,7 +108,6 @@ namespace Ship
         [ServerCallback]
         private void OnCollisionEnter(Collision other)
         {
-            Debug.Log(123);
             if (other.collider.CompareTag("shell"))
             {
                 TakeDamage(10);
@@ -122,8 +120,6 @@ namespace Ship
             {
                 Die();
             }
-
-            _canvas.GetComponent<Text>().text = _currentHealth + "/100";
         }
 
         public void Die()

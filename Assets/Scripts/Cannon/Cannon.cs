@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Cannon
 {
     [RequireComponent(typeof(LineRenderer))]
-    public class CannonController : MonoBehaviour
+    public class Cannon : MonoBehaviour
     {
         private const float MaxRotationAngle = 60f;
 
@@ -42,11 +42,7 @@ namespace Cannon
             var forward = launchPointTransform.forward;
             var shipRigidbodyVelocity = (side == Side.Left ? -1 : 1) * Vector3.Dot(shipTransform.forward, forward) *
                                         _shipRigidbody.velocity;
-            Debug.Log("velocity " + _shipRigidbody.velocity);
-            Debug.Log("shipRigidbodyVelocity " + shipRigidbodyVelocity);
-            var launchSpeed = forward * _launchSpeed + shipRigidbodyVelocity;
-            Debug.Log("launchSpeed " + launchSpeed);
-            newBall.GetComponent<Rigidbody>().velocity = launchSpeed;
+            newBall.GetComponent<Rigidbody>().velocity = forward * _launchSpeed + shipRigidbodyVelocity;
             return newBall;
         }
 
