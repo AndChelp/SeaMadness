@@ -23,8 +23,11 @@ namespace Cannon
         public float rotationSpeed = 1f;
         public float maxAimDistance = 100f;
         public float minAimDistance = 10f;
+        public double cooldown = 2;
 
         private Rigidbody _shipRigidbody;
+
+        private double lastShotTime;
 
         private void Awake()
         {
@@ -36,14 +39,15 @@ namespace Cannon
             _launchSpeed = Mathf.Sqrt(9.81f * (y + Mathf.Sqrt(x * x + y * y)));
         }
 
-        public GameObject InitCannonball()
+        public void InitCannonball()
         {
+            if (!(NetworkTime.time - lastShotTime >= cooldown)) return;
             var newBall = Instantiate(cannonball, launchPointTransform.position, launchPointTransform.rotation);
             var forward = launchPointTransform.forward;
             var shipRigidbodyVelocity = (side == Side.Left ? -1 : 1) * Vector3.Dot(shipTransform.forward, forward) *
                                         _shipRigidbody.velocity;
             newBall.GetComponent<Rigidbody>().velocity = forward * _launchSpeed + shipRigidbodyVelocity;
-            return newBall;
+            lastShotTime = NetworkTime.time;
         }
 
         public void ShowPredicateLine(bool showPredicate)

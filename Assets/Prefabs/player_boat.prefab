@@ -314,6 +314,7 @@ MonoBehaviour:
   rotationSpeed: 10
   maxAimDistance: 100
   minAimDistance: 10
+  cooldown: 5
 --- !u!1 &3571352361634157183
 GameObject:
   m_ObjectHideFlags: 0
@@ -1332,6 +1333,7 @@ MonoBehaviour:
   rotationSpeed: 10
   maxAimDistance: 100
   minAimDistance: 10
+  cooldown: 2
 --- !u!1 &3571352363320701043
 GameObject:
   m_ObjectHideFlags: 0
