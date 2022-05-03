@@ -1,6 +1,5 @@
 using Common;
 using Mirror;
-using Scripts.Common;
 using UnityEngine;
 
 namespace Cannon
@@ -14,6 +13,7 @@ namespace Cannon
 
         private float _launchSpeed = 50f;
         private float _g = 9.81f;
+        private double _lastShotTime;
 
         public Transform shipTransform;
         public Transform launchPointTransform;
@@ -27,8 +27,6 @@ namespace Cannon
 
         private Rigidbody _shipRigidbody;
 
-        private double lastShotTime;
-
         private void Awake()
         {
             _shipRigidbody = shipTransform.GetComponent<Rigidbody>();
@@ -39,15 +37,16 @@ namespace Cannon
             _launchSpeed = Mathf.Sqrt(9.81f * (y + Mathf.Sqrt(x * x + y * y)));
         }
 
-        public void InitCannonball()
+        public void InitCannonball(uint netId)
         {
-            if (!(NetworkTime.time - lastShotTime >= cooldown)) return;
+            if (!(NetworkTime.time - _lastShotTime >= cooldown)) return;
             var newBall = Instantiate(cannonball, launchPointTransform.position, launchPointTransform.rotation);
+            newBall.GetComponent<CannonBall>().ownerNetId = netId;
             var forward = launchPointTransform.forward;
             var shipRigidbodyVelocity = (side == Side.Left ? -1 : 1) * Vector3.Dot(shipTransform.forward, forward) *
                                         _shipRigidbody.velocity;
             newBall.GetComponent<Rigidbody>().velocity = forward * _launchSpeed + shipRigidbodyVelocity;
-            lastShotTime = NetworkTime.time;
+            _lastShotTime = NetworkTime.time;
         }
 
         public void ShowPredicateLine(bool showPredicate)
@@ -55,7 +54,7 @@ namespace Cannon
             _lineRenderer.enabled = showPredicate;
         }
 
-        public bool isShowPredicateLine()
+        public bool IsShowPredicateLine()
         {
             return _lineRenderer.enabled;
         }

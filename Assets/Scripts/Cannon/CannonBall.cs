@@ -6,6 +6,7 @@ namespace Cannon
     public class CannonBall : MonoBehaviour
     {
         public int damageAmount = 10;
+        public uint ownerNetId;
 
         private void FixedUpdate()
         {
@@ -15,7 +16,6 @@ namespace Cannon
             }
         }
 
-        [ServerCallback]
         private void OnTriggerEnter(Collider other)
         {
             Destroy(gameObject);

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Cannon;
 using Mirror;
 using Scripts.Common;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Ship
 {
@@ -29,11 +26,9 @@ namespace Ship
 
         public override void OnStartLocalPlayer()
         {
-            if (hasAuthority)
-            {
-                Debug.Log("player set");
-                _camera.GetComponent<CameraFollowing>().SetPlayer(transform);
-            }
+            if (!hasAuthority) return;
+            UIManager.Instance.SetHealth(100);
+            _camera.GetComponent<CameraFollowing>().SetPlayer(transform);
         }
 
         private void Update()
@@ -46,7 +41,7 @@ namespace Ship
                 for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++)
                 {
                     var cannon = cannons[cannonIndex];
-                    if (!cannon.isShowPredicateLine()) continue;
+                    if (!cannon.IsShowPredicateLine()) continue;
                     CannonFire(cannonIndex);
                 }
             }
@@ -55,7 +50,7 @@ namespace Ship
         [Command]
         private void CannonFire(int cannonIndex)
         {
-            cannons[cannonIndex].InitCannonball();
+            cannons[cannonIndex].InitCannonball(netId);
             RpcCannonFire(cannonIndex);
         }
 
@@ -64,7 +59,7 @@ namespace Ship
         {
             if (!isServer)
             {
-                cannons[cannonIndex].InitCannonball();
+                cannons[cannonIndex].InitCannonball(netId);
             }
         }
 
@@ -108,18 +103,31 @@ namespace Ship
         [ServerCallback]
         private void OnCollisionEnter(Collision other)
         {
-            if (other.collider.CompareTag("shell"))
+            if (!other.collider.CompareTag("shell")) return;
+            var ownerNetId = other.collider.GetComponent<CannonBall>().ownerNetId;
+            if (ownerNetId == netId)
             {
-                TakeDamage(10);
+                return;
             }
+
+            TakeDamage(10);
         }
 
         public void TakeDamage(int amount)
         {
-            if (amount >= 0 && (_currentHealth -= amount) <= 0)
+            var currentHealth = _currentHealth -= amount;
+            if (amount >= 0 && currentHealth <= 0)
             {
                 Die();
             }
+
+            TargetUpdateHealth(currentHealth);
+        }
+
+        [TargetRpc]
+        private void TargetUpdateHealth(int healthValue)
+        {
+            UIManager.Instance.SetHealth(healthValue);
         }
 
         public void Die()
