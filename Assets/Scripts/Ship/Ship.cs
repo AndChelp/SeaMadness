@@ -67,7 +67,7 @@ namespace Ship
         {
             if (!hasAuthority) return;
             var vertical = Input.GetAxis("Vertical");
-            _rb.AddForce(-transform.right * vertical * acceleration * Time.fixedDeltaTime, ForceMode.Acceleration);
+            _rb.AddForce(-transform.right * (vertical * acceleration * Time.fixedDeltaTime), ForceMode.Acceleration);
             var horizontal = Input.GetAxis("Horizontal");
             _rb.AddTorque(new Vector3(0, horizontal * _rb.velocity.magnitude, 0), ForceMode.Acceleration);
         }
