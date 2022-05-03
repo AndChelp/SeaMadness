@@ -18,6 +18,7 @@ namespace Cannon
         public Transform shipTransform;
         public Transform launchPointTransform;
         public GameObject cannonball;
+        public ParticleSystem shotExplosionParticles;
 
         public Side side;
         public float rotationSpeed = 1f;
@@ -47,6 +48,7 @@ namespace Cannon
                                         _shipRigidbody.velocity;
             newBall.GetComponent<Rigidbody>().velocity = forward * _launchSpeed + shipRigidbodyVelocity;
             _lastShotTime = NetworkTime.time;
+            shotExplosionParticles.Play();
         }
 
         public void ShowPredicateLine(bool showPredicate)
