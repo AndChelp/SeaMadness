@@ -23,7 +23,7 @@ namespace Ship
             _camera = Camera.main;
             _rb = transform.GetComponent<Rigidbody>();
         }
-
+        
         public override void OnStartLocalPlayer()
         {
             if (!hasAuthority) return;
@@ -116,12 +116,11 @@ namespace Ship
         public void TakeDamage(int amount)
         {
             var currentHealth = _currentHealth -= amount;
+            TargetUpdateHealth(currentHealth);
             if (amount >= 0 && currentHealth <= 0)
             {
                 Die();
             }
-
-            TargetUpdateHealth(currentHealth);
         }
 
         [TargetRpc]
