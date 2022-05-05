@@ -6,6 +6,7 @@ public class WaveWater : MonoBehaviour
     private MeshFilter _meshFilter;
 
     public float waveX = 0f;
+
     public float waveLength = 10f;
     // public float waveZ = 0f;
 
@@ -30,6 +31,7 @@ public class WaveWater : MonoBehaviour
             old.y = amplitude * Mathf.Sin(f);
             newVertices[i] = new Vector3(old.x, old.y, old.z);
         }
+
         _meshFilter.mesh.vertices = newVertices;
         _meshFilter.mesh.RecalculateNormals();
     }

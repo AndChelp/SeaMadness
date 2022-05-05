@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
-using Cannon;
+using Cannon.Cannonball;
+using Common;
 using Mirror;
-using Scripts.Common;
 using UnityEngine;
 
 namespace Ship
 {
-    public class Ship : NetworkBehaviour, Damagable
+    public class Ship : NetworkBehaviour, IDamageable
     {
         private Camera _camera;
         private Rigidbody _rb;
@@ -15,15 +15,16 @@ namespace Ship
         public float acceleration = 1500f;
 
         public List<Cannon.Cannon> cannons;
-
         public GameObject aim;
+        public CommonCannonball commonCannonball;
+        public HeavyCannonball heavyCannonball;
 
         private void Awake()
         {
             _camera = Camera.main;
             _rb = transform.GetComponent<Rigidbody>();
         }
-        
+
         public override void OnStartLocalPlayer()
         {
             if (!hasAuthority) return;
@@ -36,21 +37,44 @@ namespace Ship
             if (!hasAuthority) return;
             if (!Physics.Raycast(_camera.ScreenPointToRay(Input.mousePosition), out var hitInfo)) return;
             RotateCannons(hitInfo.point);
-            if (Input.GetMouseButtonDown(0))
+            ShotInput();
+            SelectCannonballInput(hitInfo.point);
+        }
+
+        private void SelectCannonballInput(Vector3 point)
+        {
+            var currentCannon = cannons.Find(it => it.IsInDiapason(point));
+            //      cannons[1].IsInDiapason(point);
+            if (currentCannon == null)
             {
-                for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++)
-                {
-                    var cannon = cannons[cannonIndex];
-                    if (!cannon.IsShowPredicateLine()) continue;
-                    CannonFire(cannonIndex);
-                }
+                return;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                currentCannon.Recharge(commonCannonball);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                currentCannon.Recharge(heavyCannonball);
+            }
+        }
+
+        private void ShotInput()
+        {
+            if (!Input.GetMouseButtonDown(0)) return;
+            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++)
+            {
+                var cannon = cannons[cannonIndex];
+                if (!cannon.IsShowPredicateLine()) continue;
+                CannonFire(cannonIndex);
             }
         }
 
         [Command]
         private void CannonFire(int cannonIndex)
         {
-            cannons[cannonIndex].InitCannonball(netId);
+            cannons[cannonIndex].LaunchCannonball(netId);
             RpcCannonFire(cannonIndex);
         }
 
@@ -59,7 +83,7 @@ namespace Ship
         {
             if (!isServer)
             {
-                cannons[cannonIndex].InitCannonball(netId);
+                cannons[cannonIndex].LaunchCannonball(netId);
             }
         }
 
@@ -104,13 +128,13 @@ namespace Ship
         private void OnCollisionEnter(Collision other)
         {
             if (!other.collider.CompareTag("shell")) return;
-            var ownerNetId = other.collider.GetComponent<CannonBall>().ownerNetId;
-            if (ownerNetId == netId)
+            var cannonball = other.collider.GetComponent<AbstractCannonball>();
+            if (cannonball.ownerNetId == netId)
             {
                 return;
             }
 
-            TakeDamage(10);
+            TakeDamage(cannonball.damageAmount);
         }
 
         public void TakeDamage(int amount)

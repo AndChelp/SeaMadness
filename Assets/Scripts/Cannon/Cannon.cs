@@ -1,3 +1,4 @@
+using Cannon.Cannonball;
 using Common;
 using Mirror;
 using UnityEngine;
@@ -8,45 +9,45 @@ namespace Cannon
     public class Cannon : MonoBehaviour
     {
         private const float MaxRotationAngle = 60f;
+        private const float RotationSpeed = 10f;
 
         private LineRenderer _lineRenderer;
 
-        private float _launchSpeed = 50f;
         private float _g = 9.81f;
         private double _lastShotTime;
 
+
         public Transform shipTransform;
         public Transform launchPointTransform;
-        public GameObject cannonball;
         public ParticleSystem shotExplosionParticles;
 
         public Side side;
-        public float rotationSpeed = 1f;
-        public float maxAimDistance = 100f;
         public float minAimDistance = 10f;
         public double cooldown = 2;
 
         private Rigidbody _shipRigidbody;
+
+        private Quaternion _initRotation;
+        private AbstractCannonball _currentCannonball;
 
         private void Awake()
         {
             _shipRigidbody = shipTransform.GetComponent<Rigidbody>();
             _lineRenderer = GetComponent<LineRenderer>();
             _g = -Physics.gravity.y;
-            var x = maxAimDistance + 0.25001f;
-            var y = -launchPointTransform.position.y;
-            _launchSpeed = Mathf.Sqrt(9.81f * (y + Mathf.Sqrt(x * x + y * y)));
+            _initRotation = transform.rotation;
         }
 
-        public void InitCannonball(uint netId)
+        public void LaunchCannonball(uint netId)
         {
             if (!(NetworkTime.time - _lastShotTime >= cooldown)) return;
-            var newBall = Instantiate(cannonball, launchPointTransform.position, launchPointTransform.rotation);
-            newBall.GetComponent<CannonBall>().ownerNetId = netId;
+            var newBall = Instantiate(_currentCannonball, launchPointTransform.position, launchPointTransform.rotation);
+            newBall.GetComponent<AbstractCannonball>().ownerNetId = netId;
             var forward = launchPointTransform.forward;
             var shipRigidbodyVelocity = (side == Side.Left ? -1 : 1) * Vector3.Dot(shipTransform.forward, forward) *
                                         _shipRigidbody.velocity;
-            newBall.GetComponent<Rigidbody>().velocity = forward * _launchSpeed + shipRigidbodyVelocity;
+            newBall.GetComponent<Rigidbody>().velocity =
+                forward * _currentCannonball.velocity + shipRigidbodyVelocity;
             _lastShotTime = NetworkTime.time;
             shotExplosionParticles.Play();
         }
@@ -61,15 +62,37 @@ namespace Cannon
             return _lineRenderer.enabled;
         }
 
-        public bool CanAim(Vector3 point)
+        public bool IsInDiapason(Vector3 point)
         {
             var distance = Vector3.Distance(point, transform.position);
-            if (distance < minAimDistance || distance > maxAimDistance) return false;
+            if (distance < minAimDistance)
+            {
+                return false;
+            }
+
             var direction = (point - transform.position).normalized;
             direction.y = 0;
-            var angle = Quaternion.Angle(shipTransform.rotation, Quaternion.LookRotation(direction));
-            return side == Side.Left && angle > (180f - MaxRotationAngle) ||
-                   side == Side.Right && angle < MaxRotationAngle;
+            return ByAngle(direction);
+        }
+
+        public bool CanAim(Vector3 point)
+        {
+            if (_currentCannonball == null)
+            {
+                return false;
+            }
+
+            var distance = Vector3.Distance(point, transform.position);
+            if (distance < minAimDistance || distance > _currentCannonball.maxDistance) return false;
+            var direction = (point - transform.position).normalized;
+            direction.y = 0;
+            return ByAngle(direction);
+        }
+
+        private bool ByAngle(Vector3 direction)
+        {
+            var angle = Quaternion.Angle(shipTransform.rotation * _initRotation, Quaternion.LookRotation(direction));
+            return angle < MaxRotationAngle;
         }
 
         public void Aim(Vector3 point)
@@ -78,13 +101,13 @@ namespace Cannon
             var targetDistance = point - launchPosition;
             var x = new Vector2(targetDistance.x, targetDistance.z).magnitude;
             var y = -launchPosition.y;
-            var s2 = _launchSpeed * _launchSpeed;
+            var s2 = _currentCannonball.velocity * _currentCannonball.velocity;
             var r = s2 * s2 - _g * (_g * x * x + 2f * y * s2);
             var tanTheta = (s2 - Mathf.Sqrt(r)) / (_g * x);
             var cosTheta = Mathf.Cos(Mathf.Atan(tanTheta));
             var sinTheta = cosTheta * tanTheta;
             var direction = Vector3.MoveTowards(transform.rotation * Vector3.forward, targetDistance,
-                rotationSpeed * Time.fixedDeltaTime);
+                RotationSpeed * Time.fixedDeltaTime);
             direction.y = 0;
             DrawPredicate(cosTheta, sinTheta, direction, launchPosition, point);
             Turn(direction, sinTheta);
@@ -97,8 +120,8 @@ namespace Cannon
             for (var i = 0; i < _lineRenderer.positionCount; i++)
             {
                 var t = i / 10f;
-                var dx = _launchSpeed * cosTheta * t;
-                var dy = _launchSpeed * sinTheta * t - 0.5f * _g * t * t;
+                var dx = _currentCannonball.velocity * cosTheta * t;
+                var dy = _currentCannonball.velocity * sinTheta * t - 0.5f * _g * t * t;
                 var next = launchPosition + new Vector3(direction.x * dx, dy, direction.z * dx);
                 _lineRenderer.SetPosition(i, next);
             }
@@ -108,7 +131,13 @@ namespace Cannon
         {
             var lookRotation = Quaternion.LookRotation(direction) *
                                Quaternion.AngleAxis(angle * Mathf.Rad2Deg, Vector3.left);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, lookRotation, rotationSpeed);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, lookRotation, RotationSpeed);
+        }
+
+        public void Recharge(AbstractCannonball cannonball)
+        {
+            Debug.Log("Recharging: " + cannonball.GetType().Name);
+            _currentCannonball = cannonball;
         }
     }
 }

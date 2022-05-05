@@ -1,15 +1,17 @@
-using System;
 using UnityEngine;
 
-namespace Cannon
+namespace Cannon.Cannonball
 {
-    public class CannonBall : MonoBehaviour
+    public abstract class AbstractCannonball : MonoBehaviour
     {
-        public int damageAmount = 10;
         public uint ownerNetId;
+        public int damageAmount;
+        public double cooldown;
+        public int weight;
+        public int maxDistance;
+        public float velocity;
 
-        public ParticleSystem explosionParticles;
-
+        protected abstract void PlayExplosion();
 
         private void FixedUpdate()
         {
@@ -25,12 +27,6 @@ namespace Cannon
             Debug.Log("Cannonball collided with a ship");
             PlayExplosion();
             Destroy(gameObject);
-        }
-
-        private void PlayExplosion()
-        {
-            explosionParticles.transform.parent = null;
-            explosionParticles.Play();
         }
     }
 }

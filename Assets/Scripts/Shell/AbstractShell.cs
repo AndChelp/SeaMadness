@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-
-namespace Shell
+﻿namespace Shell
 {
-    public abstract class AbstractShell 
+    public abstract class AbstractShell
     {
     }
 }

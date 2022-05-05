@@ -1,6 +1,6 @@
-﻿namespace Scripts.Common
+﻿namespace Common
 {
-    public interface Damagable
+    public interface IDamageable
     {
         void TakeDamage(int amount);
         void Die();
