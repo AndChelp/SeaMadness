@@ -4915,9 +4915,9 @@ GameObject:
   - component: {fileID: 898033308030487453}
   - component: {fileID: 2528827788914111001}
   - component: {fileID: -5750436814170229873}
-  - component: {fileID: 2694801979091598339}
+  - component: {fileID: 3961836814501529611}
   m_Layer: 6
-  m_Name: common_cannonball
+  m_Name: explosive_cannonball
   m_TagString: shell
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4933,7 +4933,7 @@ Transform:
   m_LocalRotation: {x: -0.00000003774895, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 7.827449, y: 1.7401005, z: -3.5781205}
   m_LocalScale: {x: 3, y: 3, z: 3}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 822789853943999578}
   m_Father: {fileID: 0}
@@ -5018,7 +5018,7 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 0.304952
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2694801979091598339
+--- !u!114 &3961836814501529611
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5027,13 +5027,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 9106807768465148797}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20dae8cce2e74e79ad4bc20511856a2b, type: 3}
+  m_Script: {fileID: 11500000, guid: b60a305ebce54a4397b56184a6a8d1e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ownerNetId: 0
-  damageAmount: 10
-  cooldown: 1.5
-  weight: 1
-  maxDistance: 100
-  velocity: 31
+  damageAmount: 25
+  cooldown: 4
+  weight: 2
+  maxDistance: 70
+  velocity: 26
   explosionParticles: {fileID: 8449203391634444518}

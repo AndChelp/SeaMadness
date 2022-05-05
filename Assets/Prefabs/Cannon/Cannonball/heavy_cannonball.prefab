@@ -5032,8 +5032,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ownerNetId: 0
   damageAmount: 20
-  cooldown: 0
-  weight: 0
+  cooldown: 3
+  weight: 3
   maxDistance: 40
-  velocity: 19
+  velocity: 20
   explosionParticles: {fileID: 8449203391634444518}

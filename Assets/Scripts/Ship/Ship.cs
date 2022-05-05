@@ -18,6 +18,9 @@ namespace Ship
         public GameObject aim;
         public CommonCannonball commonCannonball;
         public HeavyCannonball heavyCannonball;
+        public ChainCannonball chainCannonball;
+        public ExplosiveCannonball explosiveCannonball;
+        public IncendiaryCannonball incendiaryCannonball;
 
         private void Awake()
         {
@@ -44,7 +47,6 @@ namespace Ship
         private void SelectCannonballInput(Vector3 point)
         {
             var currentCannon = cannons.Find(it => it.IsInDiapason(point));
-            //      cannons[1].IsInDiapason(point);
             if (currentCannon == null)
             {
                 return;
@@ -57,6 +59,18 @@ namespace Ship
             else if (Input.GetKeyDown(KeyCode.Alpha2))
             {
                 currentCannon.Recharge(heavyCannonball);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                currentCannon.Recharge(chainCannonball);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                currentCannon.Recharge(explosiveCannonball);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                currentCannon.Recharge(incendiaryCannonball);
             }
         }
 

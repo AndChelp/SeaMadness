@@ -268,6 +268,9 @@ MonoBehaviour:
   aim: {fileID: 6791889881305724595}
   commonCannonball: {fileID: 2694801979091598339, guid: 207e354656370954ab161945bb9818bb, type: 3}
   heavyCannonball: {fileID: 3961836814501529611, guid: 29d88b44113f2444a997f29c4a6ed447, type: 3}
+  chainCannonball: {fileID: 3961836814501529611, guid: 4a8061d8d5b328c42851cc48d39c09ab, type: 3}
+  explosiveCannonball: {fileID: 3961836814501529611, guid: af2ec49503de9a84faf91c9f54b783be, type: 3}
+  incendiaryCannonball: {fileID: 3961836814501529611, guid: 2d8da4b44e27acb4d8b0990f731a405e, type: 3}
 --- !u!114 &6572838783742442870
 MonoBehaviour:
   m_ObjectHideFlags: 0
