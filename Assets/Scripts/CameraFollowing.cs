@@ -5,7 +5,7 @@ public class CameraFollowing : MonoBehaviour {
     public Vector3 offset;
 
     private void Update() {
-        if (player == null) {
+        if (player == null){
             return;
         }
 

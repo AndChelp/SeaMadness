@@ -21,7 +21,7 @@ public class WaveWater : MonoBehaviour {
         var oldVertices = _meshFilter.mesh.vertices;
         var newVertices = new Vector3[oldVertices.Length];
 
-        for (var i = 0; i < oldVertices.Length; i++) {
+        for (var i = 0; i < oldVertices.Length; i++){
             var old = oldVertices[i];
             var f = waveCount * (old.x - waveSpeed * Time.timeSinceLevelLoad);
             old.y = amplitude * Mathf.Sin(f);

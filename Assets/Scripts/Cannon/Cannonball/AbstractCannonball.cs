@@ -12,7 +12,7 @@ namespace Cannon.Cannonball {
 
 
         private void FixedUpdate() {
-            if (transform.position.y < -3) {
+            if (transform.position.y < -3){
                 Destroy(gameObject);
             }
         }

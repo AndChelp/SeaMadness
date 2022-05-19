@@ -1,8 +1,10 @@
+using System;
 using Cannon.Cannonball;
 using Common;
 using Manager;
 using Mirror;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Cannon {
     [RequireComponent(typeof(LineRenderer))]
@@ -45,7 +47,10 @@ namespace Cannon {
             var forward = launchPointTransform.forward;
             var shipRbVelocity = (side == Side.Left ? -1 : 1) * Vector3.Dot(shipTransform.forward, forward) *
                                  _shipRb.velocity;
-            newBall.GetComponent<Rigidbody>().velocity = forward * cannonball.velocity + shipRbVelocity;
+            var component = newBall.GetComponent<Rigidbody>();
+            component.velocity = forward * cannonball.velocity + shipRbVelocity;
+            component.angularVelocity =
+                new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10));
             _lastShotTime = NetworkTime.time;
             shotExplosionParticles.Play();
         }
