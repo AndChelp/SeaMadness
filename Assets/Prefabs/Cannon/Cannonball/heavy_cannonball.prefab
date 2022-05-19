@@ -140,7 +140,7 @@ ParticleSystem:
       m_RotationOrder: 4
   moveWithTransform: 1
   moveWithCustomTransform: {fileID: 0}
-  scalingMode: 1
+  scalingMode: 0
   randomSeed: 0
   InitialModule:
     serializedVersion: 3
@@ -5036,4 +5036,4 @@ MonoBehaviour:
   weight: 3
   maxDistance: 40
   velocity: 20
-  explosionParticles: {fileID: 8449203391634444518}
+  particles: {fileID: 8449203391634444518}

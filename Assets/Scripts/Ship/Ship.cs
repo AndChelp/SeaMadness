@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Cannon.Cannonball;
 using Common;
+using Manager;
 using Mirror;
 using UnityEngine;
 
@@ -14,11 +15,6 @@ namespace Ship {
 
         public List<Cannon.Cannon> cannons;
         public GameObject aim;
-        public CommonCannonball commonCannonball;
-        public HeavyCannonball heavyCannonball;
-        public ChainCannonball chainCannonball;
-        public ExplosiveCannonball explosiveCannonball;
-        public IncendiaryCannonball incendiaryCannonball;
 
         private void Awake() {
             _camera = Camera.main;
@@ -40,47 +36,53 @@ namespace Ship {
         }
 
         private void SelectCannonballInput(Vector3 point) {
-            var currentCannon = cannons.Find(it => it.IsInDiapason(point));
-            if (currentCannon == null) {
+            var activeCannonIndex = FindActiveCannonIndex(point);
+            if (activeCannonIndex < 0){
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1)) {
-                currentCannon.Recharge(commonCannonball);
+            if (Input.GetKeyDown(KeyCode.Alpha1)){
+                cannons[activeCannonIndex].RechargeCannonball(0);
+            } else if (Input.GetKeyDown(KeyCode.Alpha2)){
+                cannons[activeCannonIndex].RechargeCannonball(1);
+            } else if (Input.GetKeyDown(KeyCode.Alpha3)){
+                cannons[activeCannonIndex].RechargeCannonball(2);
+            } else if (Input.GetKeyDown(KeyCode.Alpha4)){
+                cannons[activeCannonIndex].RechargeCannonball(3);
+            } else if (Input.GetKeyDown(KeyCode.Alpha5)){
+                cannons[activeCannonIndex].RechargeCannonball(4);
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha2)) {
-                currentCannon.Recharge(heavyCannonball);
+        }
+
+        private int FindActiveCannonIndex(Vector3 point) {
+            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++){
+                var cannon = cannons[cannonIndex];
+                if (!cannon.IsInDiapason(point)) continue;
+                return cannonIndex;
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha3)) {
-                currentCannon.Recharge(chainCannonball);
-            }
-            else if (Input.GetKeyDown(KeyCode.Alpha4)) {
-                currentCannon.Recharge(explosiveCannonball);
-            }
-            else if (Input.GetKeyDown(KeyCode.Alpha5)) {
-                currentCannon.Recharge(incendiaryCannonball);
-            }
+
+            return -1;
         }
 
         private void ShotInput() {
             if (!Input.GetMouseButtonDown(0)) return;
-            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++) {
+            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++){
                 var cannon = cannons[cannonIndex];
                 if (!cannon.IsShowPredicateLine()) continue;
-                CannonFire(cannonIndex);
+                CmdCannonFire(cannonIndex, cannon.currentCbRId);
             }
         }
 
         [Command]
-        private void CannonFire(int cannonIndex) {
-            cannons[cannonIndex].LaunchCannonball(netId);
-            RpcCannonFire(cannonIndex);
+        private void CmdCannonFire(int cannonIndex, int cbRId) {
+            cannons[cannonIndex].LaunchCannonball(netId, cbRId);
+            RpcCannonFire(cannonIndex, cbRId);
         }
 
         [ClientRpc]
-        private void RpcCannonFire(int cannonIndex) {
-            if (!isServer) {
-                cannons[cannonIndex].LaunchCannonball(netId);
+        private void RpcCannonFire(int cannonIndex, int cbRId) {
+            if (!isServer){
+                cannons[cannonIndex].LaunchCannonball(netId, cbRId);
             }
         }
 
@@ -94,22 +96,20 @@ namespace Ship {
 
         private void RotateCannons(Vector3 point) {
             var anyCanAim = false;
-            foreach (var cannon in cannons) {
-                if (cannon.CanAim(point)) {
+            foreach (var cannon in cannons){
+                if (cannon.CanAim(point)){
                     anyCanAim = true;
                     cannon.Aim(point);
                     cannon.ShowPredicateLine(true);
-                }
-                else {
+                } else{
                     cannon.ShowPredicateLine(false);
                 }
             }
 
-            if (anyCanAim) {
+            if (anyCanAim){
                 aim.SetActive(true);
                 aim.transform.position = point;
-            }
-            else {
+            } else{
                 aim.SetActive(false);
             }
         }
@@ -118,7 +118,7 @@ namespace Ship {
         private void OnCollisionEnter(Collision other) {
             if (!other.collider.CompareTag("shell")) return;
             var cannonball = other.collider.GetComponent<AbstractCannonball>();
-            if (cannonball.ownerNetId == netId) {
+            if (cannonball.ownerNetId == netId){
                 return;
             }
 
@@ -128,7 +128,7 @@ namespace Ship {
         public void TakeDamage(int amount) {
             var currentHealth = _currentHealth -= amount;
             TargetUpdateHealth(currentHealth);
-            if (amount >= 0 && currentHealth <= 0) {
+            if (amount >= 0 && currentHealth <= 0){
                 Die();
             }
         }
