@@ -4,10 +4,8 @@ using Common;
 using Mirror;
 using UnityEngine;
 
-namespace Ship
-{
-    public class Ship : NetworkBehaviour, IDamageable
-    {
+namespace Ship {
+    public class Ship : NetworkBehaviour, IDamageable {
         private Camera _camera;
         private Rigidbody _rb;
         [SyncVar] private int _currentHealth = 100;
@@ -22,21 +20,18 @@ namespace Ship
         public ExplosiveCannonball explosiveCannonball;
         public IncendiaryCannonball incendiaryCannonball;
 
-        private void Awake()
-        {
+        private void Awake() {
             _camera = Camera.main;
             _rb = transform.GetComponent<Rigidbody>();
         }
 
-        public override void OnStartLocalPlayer()
-        {
+        public override void OnStartLocalPlayer() {
             if (!hasAuthority) return;
             UIManager.Instance.SetHealth(100);
             _camera.GetComponent<CameraFollowing>().SetPlayer(transform);
         }
 
-        private void Update()
-        {
+        private void Update() {
             if (!hasAuthority) return;
             if (!Physics.Raycast(_camera.ScreenPointToRay(Input.mousePosition), out var hitInfo)) return;
             RotateCannons(hitInfo.point);
@@ -44,41 +39,32 @@ namespace Ship
             SelectCannonballInput(hitInfo.point);
         }
 
-        private void SelectCannonballInput(Vector3 point)
-        {
+        private void SelectCannonballInput(Vector3 point) {
             var currentCannon = cannons.Find(it => it.IsInDiapason(point));
-            if (currentCannon == null)
-            {
+            if (currentCannon == null) {
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1))
-            {
+            if (Input.GetKeyDown(KeyCode.Alpha1)) {
                 currentCannon.Recharge(commonCannonball);
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha2))
-            {
+            else if (Input.GetKeyDown(KeyCode.Alpha2)) {
                 currentCannon.Recharge(heavyCannonball);
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha3))
-            {
+            else if (Input.GetKeyDown(KeyCode.Alpha3)) {
                 currentCannon.Recharge(chainCannonball);
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha4))
-            {
+            else if (Input.GetKeyDown(KeyCode.Alpha4)) {
                 currentCannon.Recharge(explosiveCannonball);
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha5))
-            {
+            else if (Input.GetKeyDown(KeyCode.Alpha5)) {
                 currentCannon.Recharge(incendiaryCannonball);
             }
         }
 
-        private void ShotInput()
-        {
+        private void ShotInput() {
             if (!Input.GetMouseButtonDown(0)) return;
-            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++)
-            {
+            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++) {
                 var cannon = cannons[cannonIndex];
                 if (!cannon.IsShowPredicateLine()) continue;
                 CannonFire(cannonIndex);
@@ -86,23 +72,19 @@ namespace Ship
         }
 
         [Command]
-        private void CannonFire(int cannonIndex)
-        {
+        private void CannonFire(int cannonIndex) {
             cannons[cannonIndex].LaunchCannonball(netId);
             RpcCannonFire(cannonIndex);
         }
 
         [ClientRpc]
-        private void RpcCannonFire(int cannonIndex)
-        {
-            if (!isServer)
-            {
+        private void RpcCannonFire(int cannonIndex) {
+            if (!isServer) {
                 cannons[cannonIndex].LaunchCannonball(netId);
             }
         }
 
-        private void FixedUpdate()
-        {
+        private void FixedUpdate() {
             if (!hasAuthority) return;
             var vertical = Input.GetAxis("Vertical");
             _rb.AddForce(-transform.right * (vertical * acceleration * Time.fixedDeltaTime), ForceMode.Acceleration);
@@ -110,65 +92,53 @@ namespace Ship
             _rb.AddTorque(new Vector3(0, horizontal * _rb.velocity.magnitude, 0), ForceMode.Acceleration);
         }
 
-        private void RotateCannons(Vector3 point)
-        {
+        private void RotateCannons(Vector3 point) {
             var anyCanAim = false;
-            foreach (var cannon in cannons)
-            {
-                if (cannon.CanAim(point))
-                {
+            foreach (var cannon in cannons) {
+                if (cannon.CanAim(point)) {
                     anyCanAim = true;
                     cannon.Aim(point);
                     cannon.ShowPredicateLine(true);
                 }
-                else
-                {
+                else {
                     cannon.ShowPredicateLine(false);
                 }
             }
 
-            if (anyCanAim)
-            {
+            if (anyCanAim) {
                 aim.SetActive(true);
                 aim.transform.position = point;
             }
-            else
-            {
+            else {
                 aim.SetActive(false);
             }
         }
 
         [ServerCallback]
-        private void OnCollisionEnter(Collision other)
-        {
+        private void OnCollisionEnter(Collision other) {
             if (!other.collider.CompareTag("shell")) return;
             var cannonball = other.collider.GetComponent<AbstractCannonball>();
-            if (cannonball.ownerNetId == netId)
-            {
+            if (cannonball.ownerNetId == netId) {
                 return;
             }
 
             TakeDamage(cannonball.damageAmount);
         }
 
-        public void TakeDamage(int amount)
-        {
+        public void TakeDamage(int amount) {
             var currentHealth = _currentHealth -= amount;
             TargetUpdateHealth(currentHealth);
-            if (amount >= 0 && currentHealth <= 0)
-            {
+            if (amount >= 0 && currentHealth <= 0) {
                 Die();
             }
         }
 
         [TargetRpc]
-        private void TargetUpdateHealth(int healthValue)
-        {
+        private void TargetUpdateHealth(int healthValue) {
             UIManager.Instance.SetHealth(healthValue);
         }
 
-        public void Die()
-        {
+        public void Die() {
             NetworkServer.Destroy(gameObject);
         }
     }

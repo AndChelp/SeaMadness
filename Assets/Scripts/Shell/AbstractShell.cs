@@ -1,6 +1,3 @@
-﻿namespace Shell
-{
-    public abstract class AbstractShell
-    {
-    }
+﻿namespace Shell {
+    public abstract class AbstractShell { }
 }

@@ -1,7 +1,5 @@
-﻿namespace Common
-{
-    public enum Side
-    {
+﻿namespace Common {
+    public enum Side {
         Left,
         Right
     }

@@ -3,11 +3,9 @@ using Common;
 using Mirror;
 using UnityEngine;
 
-namespace Cannon
-{
+namespace Cannon {
     [RequireComponent(typeof(LineRenderer))]
-    public class Cannon : MonoBehaviour
-    {
+    public class Cannon : MonoBehaviour {
         private const float MaxRotationAngle = 60f;
         private const float RotationSpeed = 10f;
 
@@ -30,16 +28,14 @@ namespace Cannon
         private Quaternion _initRotation;
         private AbstractCannonball _currentCannonball;
 
-        private void Awake()
-        {
+        private void Awake() {
             _shipRigidbody = shipTransform.GetComponent<Rigidbody>();
             _lineRenderer = GetComponent<LineRenderer>();
             _g = -Physics.gravity.y;
             _initRotation = transform.rotation;
         }
 
-        public void LaunchCannonball(uint netId)
-        {
+        public void LaunchCannonball(uint netId) {
             if (!(NetworkTime.time - _lastShotTime >= cooldown)) return;
             var newBall = Instantiate(_currentCannonball, launchPointTransform.position, launchPointTransform.rotation);
             newBall.GetComponent<AbstractCannonball>().ownerNetId = netId;
@@ -52,21 +48,17 @@ namespace Cannon
             shotExplosionParticles.Play();
         }
 
-        public void ShowPredicateLine(bool showPredicate)
-        {
+        public void ShowPredicateLine(bool showPredicate) {
             _lineRenderer.enabled = showPredicate;
         }
 
-        public bool IsShowPredicateLine()
-        {
+        public bool IsShowPredicateLine() {
             return _lineRenderer.enabled;
         }
 
-        public bool IsInDiapason(Vector3 point)
-        {
+        public bool IsInDiapason(Vector3 point) {
             var distance = Vector3.Distance(point, transform.position);
-            if (distance < minAimDistance)
-            {
+            if (distance < minAimDistance) {
                 return false;
             }
 
@@ -75,10 +67,8 @@ namespace Cannon
             return ByAngle(direction);
         }
 
-        public bool CanAim(Vector3 point)
-        {
-            if (_currentCannonball == null)
-            {
+        public bool CanAim(Vector3 point) {
+            if (_currentCannonball == null) {
                 return false;
             }
 
@@ -89,14 +79,12 @@ namespace Cannon
             return ByAngle(direction);
         }
 
-        private bool ByAngle(Vector3 direction)
-        {
+        private bool ByAngle(Vector3 direction) {
             var angle = Quaternion.Angle(shipTransform.rotation * _initRotation, Quaternion.LookRotation(direction));
             return angle < MaxRotationAngle;
         }
 
-        public void Aim(Vector3 point)
-        {
+        public void Aim(Vector3 point) {
             var launchPosition = launchPointTransform.position;
             var targetDistance = point - launchPosition;
             var x = new Vector2(targetDistance.x, targetDistance.z).magnitude;
@@ -114,11 +102,9 @@ namespace Cannon
         }
 
         private void DrawPredicate(float cosTheta, float sinTheta, Vector3 direction, Vector3 launchPosition,
-            Vector3 targetPosition)
-        {
+            Vector3 targetPosition) {
             _lineRenderer.positionCount = (int) (Vector3.Distance(targetPosition, launchPosition) * 0.2f);
-            for (var i = 0; i < _lineRenderer.positionCount; i++)
-            {
+            for (var i = 0; i < _lineRenderer.positionCount; i++) {
                 var t = i / 10f;
                 var dx = _currentCannonball.velocity * cosTheta * t;
                 var dy = _currentCannonball.velocity * sinTheta * t - 0.5f * _g * t * t;
@@ -127,15 +113,13 @@ namespace Cannon
             }
         }
 
-        private void Turn(Vector3 direction, float angle)
-        {
+        private void Turn(Vector3 direction, float angle) {
             var lookRotation = Quaternion.LookRotation(direction) *
                                Quaternion.AngleAxis(angle * Mathf.Rad2Deg, Vector3.left);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, lookRotation, RotationSpeed);
         }
 
-        public void Recharge(AbstractCannonball cannonball)
-        {
+        public void Recharge(AbstractCannonball cannonball) {
             Debug.Log("Recharging: " + cannonball.GetType().Name);
             _currentCannonball = cannonball;
         }
