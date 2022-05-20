@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Cannon.Cannonball;
 using Common;
 using Manager;
@@ -12,9 +13,13 @@ namespace Ship {
         [SyncVar] private int _currentHealth = 100;
 
         public float acceleration = 1500f;
+        public int inventorySize = 5;
 
         public List<Cannon.Cannon> cannons;
         public GameObject aim;
+
+        // todo не хочу, чтобы все клиенты знали об инвентарях других клиентов
+        private readonly List<InventoryItem> _inventory = new();
 
         private void Awake() {
             _camera = Camera.main;
@@ -22,9 +27,18 @@ namespace Ship {
         }
 
         public override void OnStartLocalPlayer() {
+            base.OnStartLocalPlayer();
             if (!hasAuthority) return;
             UIManager.Instance.SetHealth(100);
             _camera.GetComponent<CameraFollowing>().SetPlayer(transform);
+        }
+
+        private void FixedUpdate() {
+            if (!hasAuthority) return;
+            var vertical = Input.GetAxis("Vertical");
+            _rb.AddForce(-transform.right * (vertical * acceleration * Time.fixedDeltaTime), ForceMode.Acceleration);
+            var horizontal = Input.GetAxis("Horizontal");
+            _rb.AddTorque(new Vector3(0, horizontal * _rb.velocity.magnitude, 0), ForceMode.Acceleration);
         }
 
         private void Update() {
@@ -35,23 +49,53 @@ namespace Ship {
             SelectCannonballInput(hitInfo.point);
         }
 
+        [Command]
+        private void CmdAddToInventory(int rId, int count) {
+            Debug.Log("CmdAddToInventory rId = " + rId + " count = " + count);
+            if (AddToInventory(rId, count)){
+                TargetAddToInventory(rId, count);
+            }
+        }
+
+        [TargetRpc]
+        private void TargetAddToInventory(int rId, int count) {
+            Debug.Log("TargetAddToInventory rId = " + rId + " count = " + count);
+            AddToInventory(rId, count);
+        }
+
+        private bool AddToInventory(int rId, int count) {
+            var item = _inventory.Find(it => it.rId == rId);
+            if (item != null){
+                item.count += count;
+                return true;
+            }
+            if (_inventory.Count <= inventorySize){
+                _inventory.Add(new InventoryItem(rId, count));
+                return true;
+            }
+            return false;
+        }
+
         private void SelectCannonballInput(Vector3 point) {
             var activeCannonIndex = FindActiveCannonIndex(point);
-            if (activeCannonIndex < 0){
-                return;
+            if (activeCannonIndex == -1) return;
+            var inventoryIndex = InputInventoryIndex();
+            if (inventoryIndex == -1 || _inventory.Count <= inventoryIndex) return;
+            var cannon = cannons[activeCannonIndex];
+            if (cannon.isCharged){
+                Debug.Log("Cannon was charged, call discharge");
+                CmdAddToInventory(cannon.DischargeCannonball(), 1);
             }
+            CmdUseItem(cannon.RechargeCannonball(_inventory[inventoryIndex].rId));
+        }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1)){
-                cannons[activeCannonIndex].RechargeCannonball(0);
-            } else if (Input.GetKeyDown(KeyCode.Alpha2)){
-                cannons[activeCannonIndex].RechargeCannonball(1);
-            } else if (Input.GetKeyDown(KeyCode.Alpha3)){
-                cannons[activeCannonIndex].RechargeCannonball(2);
-            } else if (Input.GetKeyDown(KeyCode.Alpha4)){
-                cannons[activeCannonIndex].RechargeCannonball(3);
-            } else if (Input.GetKeyDown(KeyCode.Alpha5)){
-                cannons[activeCannonIndex].RechargeCannonball(4);
-            }
+        private static int InputInventoryIndex() {
+            if (Input.GetKeyDown(KeyCode.Alpha1)) return 0;
+            if (Input.GetKeyDown(KeyCode.Alpha2)) return 1;
+            if (Input.GetKeyDown(KeyCode.Alpha3)) return 2;
+            if (Input.GetKeyDown(KeyCode.Alpha4)) return 3;
+            if (Input.GetKeyDown(KeyCode.Alpha5)) return 4;
+            return -1;
         }
 
         private int FindActiveCannonIndex(Vector3 point) {
@@ -74,6 +118,28 @@ namespace Ship {
         }
 
         [Command]
+        private void CmdUseItem(int rId) {
+            if (UseItem(rId)){
+                TargetUseItem(rId);
+            }
+        }
+
+        [TargetRpc]
+        private void TargetUseItem(int rId) {
+            UseItem(rId);
+        }
+
+        private bool UseItem(int rId) {
+            Debug.Log("UseItem rId = " + rId);
+            var item = _inventory.Find(it => it.rId == rId);
+            if (item == null) throw new Exception("Item with rId = " + rId + " not found in inventory");
+            if (--item.count <= 0){
+                _inventory.Remove(item);
+            }
+            return true;
+        }
+
+        [Command]
         private void CmdCannonFire(int cannonIndex, int cbRId) {
             cannons[cannonIndex].LaunchCannonball(netId, cbRId);
             RpcCannonFire(cannonIndex, cbRId);
@@ -84,14 +150,6 @@ namespace Ship {
             if (!isServer){
                 cannons[cannonIndex].LaunchCannonball(netId, cbRId);
             }
-        }
-
-        private void FixedUpdate() {
-            if (!hasAuthority) return;
-            var vertical = Input.GetAxis("Vertical");
-            _rb.AddForce(-transform.right * (vertical * acceleration * Time.fixedDeltaTime), ForceMode.Acceleration);
-            var horizontal = Input.GetAxis("Horizontal");
-            _rb.AddTorque(new Vector3(0, horizontal * _rb.velocity.magnitude, 0), ForceMode.Acceleration);
         }
 
         private void RotateCannons(Vector3 point) {
@@ -116,13 +174,20 @@ namespace Ship {
 
         [ServerCallback]
         private void OnCollisionEnter(Collision other) {
-            if (!other.collider.CompareTag("shell")) return;
-            var cannonball = other.collider.GetComponent<AbstractCannonball>();
-            if (cannonball.ownerNetId == netId){
-                return;
+            switch (other.collider.tag){
+                case "barrel":
+                    Debug.Log("OnCollisionEnter barrel");
+                    if (AddToInventory(0, 1)){
+                        TargetAddToInventory(0, 1);
+                    }
+                    break;
+                case "shell":
+                    Debug.Log("OnCollisionEnter shell");
+                    var cannonball = other.collider.GetComponent<AbstractCannonball>();
+                    if (cannonball.ownerNetId == netId) return;
+                    TakeDamage(cannonball.damageAmount);
+                    break;
             }
-
-            TakeDamage(cannonball.damageAmount);
         }
 
         public void TakeDamage(int amount) {

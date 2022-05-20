@@ -31,6 +31,8 @@ namespace Cannon {
         private AbstractCannonball _currentCb;
         public int currentCbRId { get; private set; }
 
+        public bool isCharged;
+
         private void Awake() {
             _shipRb = shipTransform.GetComponent<Rigidbody>();
             _lineRenderer = GetComponent<LineRenderer>();
@@ -53,7 +55,9 @@ namespace Cannon {
                 new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10));
             _lastShotTime = NetworkTime.time;
             shotExplosionParticles.Play();
+            isCharged = false;
         }
+
 
         public void ShowPredicateLine(bool showPredicate) {
             _lineRenderer.enabled = showPredicate;
@@ -75,7 +79,7 @@ namespace Cannon {
         }
 
         public bool CanAim(Vector3 point) {
-            if (_currentCb == null){
+            if (!isCharged){
                 return false;
             }
 
@@ -126,10 +130,17 @@ namespace Cannon {
             transform.rotation = Quaternion.RotateTowards(transform.rotation, lookRotation, RotationSpeed);
         }
 
-        public void RechargeCannonball(int cbResourceId) {
-            this.currentCbRId = cbResourceId;
-            _currentCb = ResourceManager.Instance.GetCannonball(cbResourceId);
+        public int DischargeCannonball() {
+            isCharged = false;
+            return currentCbRId;
+        }
+
+        public int RechargeCannonball(int cbRId) {
+            currentCbRId = cbRId;
+            _currentCb = ResourceManager.Instance.GetCannonball(cbRId);
+            isCharged = true;
             Debug.Log("Recharging: " + _currentCb.GetType().Name);
+            return currentCbRId;
         }
     }
 }

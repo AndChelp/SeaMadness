@@ -1,20 +1,25 @@
+using Common;
 using UnityEngine;
 
 namespace Cannon.Cannonball {
-    public abstract class AbstractCannonball : MonoBehaviour {
+    public abstract class AbstractCannonball : MonoBehaviour, IItem {
         public uint ownerNetId;
         public int damageAmount;
         public double cooldown;
-        public int weight;
+        [SerializeField] private int maxCount;
         public int maxDistance;
         public float velocity;
         public ParticleSystem particles;
-
 
         private void FixedUpdate() {
             if (transform.position.y < -3){
                 Destroy(gameObject);
             }
+        }
+
+        public int maxCountProperty {
+            get => maxCount;
+            set => maxCount = value;
         }
 
         private void OnCollisionEnter(Collision other) {

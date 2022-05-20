@@ -7,6 +7,7 @@ TagManager:
   - shell
   - water
   - ship
+  - barrel
   layers:
   - Default
   - TransparentFX

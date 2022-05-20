@@ -17,6 +17,8 @@ GameObject:
   - component: {fileID: -4437289367514066208}
   - component: {fileID: 6865379991463353211}
   - component: {fileID: -6742371837678731412}
+  - component: {fileID: 3058102584273971361}
+  - component: {fileID: 6816856473078424756}
   - component: {fileID: -563271563274507211}
   - component: {fileID: 6572838783742442870}
   m_Layer: 0
@@ -245,6 +247,76 @@ MonoBehaviour:
   showOverlay: 0
   overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
   target: {fileID: 232985007692091895}
+--- !u!114 &3058102584273971361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3571352361634157183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 734b48bea0b204338958ee3d885e11f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  clientAuthority: 1
+  sendInterval: 0.05
+  syncPosition: 1
+  syncRotation: 1
+  syncScale: 0
+  interpolatePosition: 1
+  interpolateRotation: 1
+  interpolateScale: 0
+  bufferTimeMultiplier: 1
+  bufferSizeLimit: 64
+  catchupThreshold: 4
+  catchupMultiplier: 0.1
+  onlySyncOnChange: 1
+  bufferResetMultiplier: 5
+  positionSensitivity: 0.01
+  rotationSensitivity: 0.01
+  scaleSensitivity: 0.01
+  showGizmos: 0
+  showOverlay: 0
+  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
+  target: {fileID: 1812134671521267773}
+--- !u!114 &6816856473078424756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3571352361634157183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 734b48bea0b204338958ee3d885e11f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  clientAuthority: 1
+  sendInterval: 0.05
+  syncPosition: 1
+  syncRotation: 1
+  syncScale: 0
+  interpolatePosition: 1
+  interpolateRotation: 1
+  interpolateScale: 0
+  bufferTimeMultiplier: 1
+  bufferSizeLimit: 64
+  catchupThreshold: 4
+  catchupMultiplier: 0.1
+  onlySyncOnChange: 1
+  bufferResetMultiplier: 5
+  positionSensitivity: 0.01
+  rotationSensitivity: 0.01
+  scaleSensitivity: 0.01
+  showGizmos: 0
+  showOverlay: 0
+  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
+  target: {fileID: 1452078134113435115}
 --- !u!114 &-563271563274507211
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -260,18 +332,13 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   acceleration: 1500
+  inventorySize: 5
   cannons:
   - {fileID: 437587891892917023}
   - {fileID: 1452078134113435117}
   - {fileID: 232985007692091889}
   - {fileID: 1812134671521267771}
   aim: {fileID: 6791889881305724595}
-  cannonballs:
-  - {fileID: -1306061306674409020, guid: 6c339a86f3c8cde438d3db624839982c, type: 3}
-  - {fileID: 3961836814501529611, guid: 29d88b44113f2444a997f29c4a6ed447, type: 3}
-  - {fileID: 3961836814501529611, guid: 4a8061d8d5b328c42851cc48d39c09ab, type: 3}
-  - {fileID: 3961836814501529611, guid: af2ec49503de9a84faf91c9f54b783be, type: 3}
-  - {fileID: 3961836814501529611, guid: 2d8da4b44e27acb4d8b0990f731a405e, type: 3}
 --- !u!114 &6572838783742442870
 MonoBehaviour:
   m_ObjectHideFlags: 0
