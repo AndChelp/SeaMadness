@@ -1,3 +1,3 @@
 namespace Cannon.Cannonball {
-    public class ExplosiveCannonball : AbstractCannonball { }
+    public class ExplosiveCannonball : AbstractCannonball {}
 }

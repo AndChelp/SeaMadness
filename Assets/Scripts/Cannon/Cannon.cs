@@ -1,10 +1,8 @@
-using System;
 using Cannon.Cannonball;
 using Common;
 using Manager;
 using Mirror;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Cannon {
     [RequireComponent(typeof(LineRenderer))]

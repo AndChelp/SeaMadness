@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Cannon;
 using Cannon.Cannonball;
 using Common;
 using Manager;
@@ -18,12 +19,16 @@ namespace Ship {
         public List<Cannon.Cannon> cannons;
         public GameObject aim;
 
+        private CannonsController _cannonsController;
+
+
         #region Initialization
 
         private void Awake() {
             _camera = Camera.main;
             _rb = transform.GetComponent<Rigidbody>();
             _inventory = new Inventory.Inventory();
+            _cannonsController = new CannonsController(cannons, aim);
         }
 
         public override void OnStartLocalPlayer() {
@@ -47,40 +52,16 @@ namespace Ship {
         private void Update() {
             if (!hasAuthority) return;
             if (!Physics.Raycast(_camera.ScreenPointToRay(Input.mousePosition), out var hitInfo)) return;
-            RotateCannons(hitInfo.point);
+            _cannonsController.RotateTo(hitInfo.point);
             ShotInput();
-            ChargeCannonballInput(hitInfo.point);
-        }
-
-        private void RotateCannons(Vector3 point) {
-            var anyCanAim = false;
-            foreach (var cannon in cannons){
-                if (cannon.CanAim(point)){
-                    anyCanAim = true;
-                    cannon.Aim(point);
-                    cannon.ShowPredicateLine(true);
-                } else{
-                    cannon.ShowPredicateLine(false);
-                }
-            }
-
-            if (anyCanAim){
-                aim.SetActive(true);
-                aim.transform.position = point;
-            } else{
-                aim.SetActive(false);
-            }
+            RechargeInput(hitInfo.point);
         }
 
         #region Shooting
 
         private void ShotInput() {
             if (!Input.GetMouseButtonDown(0)) return;
-            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++){
-                var cannon = cannons[cannonIndex];
-                if (!cannon.IsShowPredicateLine()) continue;
-                CmdCannonFire(cannonIndex, cannon.currentCbRId);
-            }
+            _cannonsController.ForEachActive((index, cannon) => CmdCannonFire(index, cannon.currentCbRId));
         }
 
         [Command]
@@ -90,25 +71,28 @@ namespace Ship {
 
         [ClientRpc]
         private void RpcCannonFire(int cannonIndex, int cbRId) {
-            cannons[cannonIndex].LaunchCannonball(netId, cbRId);
+            _cannonsController.Fire(netId, cannonIndex, cbRId);
         }
 
         #endregion
 
         #region Charging
 
-        private void ChargeCannonballInput(Vector3 point) {
-            var activeCannonIndex = FindActiveCannonIndex(point);
-            if (activeCannonIndex == -1) return;
+        private void RechargeInput(Vector3 point) {
+            var cannon = _cannonsController.AccessibleCannon(point);
+            if (cannon == null) return;
             var item = _inventory.SelectedItemInput();
             if (item == null) return;
-            var cannon = cannons[activeCannonIndex];
             if (cannon.isCharged){
                 Debug.Log("Cannon was charged, calling discharge");
                 CmdAddToInventory(cannon.DischargeCannonball(), 1);
             }
             CmdUseItem(cannon.RechargeCannonball(item.rId));
         }
+
+        #endregion
+
+        #region Inventory
 
         [Command]
         private void CmdAddToInventory(int rId, int count) {
@@ -121,19 +105,6 @@ namespace Ship {
             Debug.LogAssertion("TargetAddToInventory rId = " + rId + " count = " + count);
             _inventory.AddItem(rId, count);
         }
-
-        private int FindActiveCannonIndex(Vector3 point) {
-            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++){
-                var cannon = cannons[cannonIndex];
-                if (!cannon.IsInDiapason(point)) continue;
-                return cannonIndex;
-            }
-            return -1;
-        }
-
-        #endregion
-
-        #region Inventory
 
         [Command]
         private void CmdUseItem(int rId) {

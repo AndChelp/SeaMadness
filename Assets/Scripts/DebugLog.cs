@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 namespace DefaultNamespace {
@@ -31,7 +30,7 @@ namespace DefaultNamespace {
             }
             var width = Screen.width / 2.0f;
             var height = Screen.height / 3.0f;
-            GUILayout.BeginArea(new Rect(Screen.width - width - 10, 10, width, height ));
+            GUILayout.BeginArea(new Rect(Screen.width - width - 10, 10, width, height));
             _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(height),
                 GUILayout.Width(width));
             GUILayout.TextArea(_myLog, GUILayout.ExpandHeight(true));
