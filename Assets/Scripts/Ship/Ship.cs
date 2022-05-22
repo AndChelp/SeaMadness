@@ -16,11 +16,9 @@ namespace Ship {
 
         public float acceleration = 1500f;
 
+        private CannonsController _cannonsController;
         public List<Cannon.Cannon> cannons;
         public GameObject aim;
-
-        private CannonsController _cannonsController;
-
 
         #region Initialization
 
@@ -66,12 +64,12 @@ namespace Ship {
 
         [Command]
         private void CmdCannonFire(int cannonIndex, int cbRId) {
-            RpcCannonFire(cannonIndex, cbRId);
+            if (_cannonsController.Fire(netId, cannonIndex, cbRId)) RpcCannonFire(cannonIndex, cbRId);
         }
 
         [ClientRpc]
         private void RpcCannonFire(int cannonIndex, int cbRId) {
-            _cannonsController.Fire(netId, cannonIndex, cbRId);
+            if (!isServer) _cannonsController.Fire(netId, cannonIndex, cbRId);
         }
 
         #endregion
@@ -102,8 +100,8 @@ namespace Ship {
 
         [TargetRpc]
         private void TargetAddToInventory(int rId, int count) {
-            Debug.LogAssertion("TargetAddToInventory rId = " + rId + " count = " + count);
-            _inventory.AddItem(rId, count);
+            Debug.Log("TargetAddToInventory rId = " + rId + " count = " + count);
+            if (!isServer) _inventory.AddItem(rId, count);
         }
 
         [Command]
@@ -113,7 +111,7 @@ namespace Ship {
 
         [TargetRpc]
         private void TargetUseItem(int rId) {
-            _inventory.UseItem(rId);
+            if (!isServer) _inventory.UseItem(rId);
         }
 
         #endregion

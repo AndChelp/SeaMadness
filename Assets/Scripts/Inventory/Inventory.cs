@@ -20,13 +20,13 @@ namespace Inventory {
             var item = _inventory.Find(it => it.rId == rId);
             if (item != null){
                 item.count += count;
-                return true;
+                return BoolResult.Success;
             }
             if (_inventory.Count <= InventorySize){
                 _inventory.Add(new InventoryItem(rId, count));
-                return true;
+                return BoolResult.Success;
             }
-            return false;
+            return BoolResult.Failure;
         }
 
         public bool UseItem(int rId) {
@@ -36,7 +36,7 @@ namespace Inventory {
             if (--item.count <= 0){
                 _inventory.Remove(item);
             }
-            return true;
+            return BoolResult.Success;
         }
     }
 }

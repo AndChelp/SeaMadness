@@ -38,8 +38,9 @@ namespace Cannon {
             _initRotation = transform.rotation;
         }
 
-        public void LaunchCannonball(uint netId, int cbRId) {
-            //if (!(NetworkTime.time - _lastShotTime >= _currentCannonball.cooldown)) return;
+        public bool LaunchCannonball(uint netId, int cbRId) {
+            if (!IsShowPredicateLine()) return BoolResult.Failure;
+            //if (!(NetworkTime.time - _lastShotTime >= _currentCannonball.cooldown)) return BoolResult.Failure;
             var cannonball = ResourceManager.Instance.GetCannonball(cbRId);
             Debug.Log("LaunchCannonball " + cannonball.GetType().Name + ", ownerId = " + netId);
             var newBall = Instantiate(cannonball, launchPointTransform.position, launchPointTransform.rotation);
@@ -54,6 +55,7 @@ namespace Cannon {
             _lastShotTime = NetworkTime.time;
             shotExplosionParticles.Play();
             isCharged = false;
+            return BoolResult.Success;
         }
 
 
@@ -68,7 +70,7 @@ namespace Cannon {
         public bool IsInDiapason(Vector3 point) {
             var distance = Vector3.Distance(point, transform.position);
             if (distance < minAimDistance){
-                return false;
+                return BoolResult.Failure;
             }
 
             var direction = (point - transform.position).normalized;
@@ -78,11 +80,11 @@ namespace Cannon {
 
         public bool CanAim(Vector3 point) {
             if (!isCharged){
-                return false;
+                return BoolResult.Failure;
             }
 
             var distance = Vector3.Distance(point, transform.position);
-            if (distance < minAimDistance || distance > _currentCb.maxDistance) return false;
+            if (distance < minAimDistance || distance > _currentCb.maxDistance) return BoolResult.Failure;
             var direction = (point - transform.position).normalized;
             direction.y = 0;
             return ByAngle(direction);

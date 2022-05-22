@@ -33,8 +33,8 @@ namespace Cannon {
             }
         }
 
-        public void Fire(uint netId, int cannonIndex, int cbRId) {
-            _cannons[cannonIndex].LaunchCannonball(netId, cbRId);
+        public bool Fire(uint netId, int cannonIndex, int cbRId) {
+            return _cannons[cannonIndex].LaunchCannonball(netId, cbRId);
         }
 
         public Cannon AccessibleCannon(Vector3 point) {
