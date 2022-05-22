@@ -8,23 +8,22 @@ using UnityEngine;
 
 namespace Ship {
     public class Ship : NetworkBehaviour, IDamageable {
+        private Inventory.Inventory _inventory;
         private Camera _camera;
         private Rigidbody _rb;
         [SyncVar] private int _currentHealth = 100;
 
         public float acceleration = 1500f;
-        public int inventorySize = 5;
 
         public List<Cannon.Cannon> cannons;
         public GameObject aim;
-
-        private readonly List<InventoryItem> _inventory = new();
 
         #region Initialization
 
         private void Awake() {
             _camera = Camera.main;
             _rb = transform.GetComponent<Rigidbody>();
+            _inventory = new Inventory.Inventory();
         }
 
         public override void OnStartLocalPlayer() {
@@ -35,7 +34,7 @@ namespace Ship {
         }
 
         #endregion
-       
+
         private void FixedUpdate() {
             if (!hasAuthority) return;
             var vertical = Input.GetAxis("Vertical");
@@ -52,7 +51,7 @@ namespace Ship {
             ShotInput();
             ChargeCannonballInput(hitInfo.point);
         }
-        
+
         private void RotateCannons(Vector3 point) {
             var anyCanAim = false;
             foreach (var cannon in cannons){
@@ -101,26 +100,26 @@ namespace Ship {
         private void ChargeCannonballInput(Vector3 point) {
             var activeCannonIndex = FindActiveCannonIndex(point);
             if (activeCannonIndex == -1) return;
-            var inventoryIndex = InputInventoryIndex();
-            if (inventoryIndex == -1 || _inventory.Count <= inventoryIndex) return;
+            var item = _inventory.SelectedItemInput();
+            if (item == null) return;
             var cannon = cannons[activeCannonIndex];
             if (cannon.isCharged){
-                Debug.Log("Cannon was charged, call discharge");
+                Debug.Log("Cannon was charged, calling discharge");
                 CmdAddToInventory(cannon.DischargeCannonball(), 1);
             }
-            CmdUseItem(cannon.RechargeCannonball(_inventory[inventoryIndex].rId));
+            CmdUseItem(cannon.RechargeCannonball(item.rId));
         }
 
         [Command]
         private void CmdAddToInventory(int rId, int count) {
             Debug.Log("CmdAddToInventory rId = " + rId + " count = " + count);
-            if (AddToInventory(rId, count)) TargetAddToInventory(rId, count);
+            if (_inventory.AddItem(rId, count)) TargetAddToInventory(rId, count);
         }
 
         [TargetRpc]
         private void TargetAddToInventory(int rId, int count) {
-            Debug.Log("TargetAddToInventory rId = " + rId + " count = " + count);
-            AddToInventory(rId, count);
+            Debug.LogAssertion("TargetAddToInventory rId = " + rId + " count = " + count);
+            _inventory.AddItem(rId, count);
         }
 
         private int FindActiveCannonIndex(Vector3 point) {
@@ -129,7 +128,6 @@ namespace Ship {
                 if (!cannon.IsInDiapason(point)) continue;
                 return cannonIndex;
             }
-
             return -1;
         }
 
@@ -137,47 +135,14 @@ namespace Ship {
 
         #region Inventory
 
-        private bool AddToInventory(int rId, int count) {
-            var item = _inventory.Find(it => it.rId == rId);
-            if (item != null){
-                item.count += count;
-                return true;
-            }
-            if (_inventory.Count <= inventorySize){
-                _inventory.Add(new InventoryItem(rId, count));
-                return true;
-            }
-            return false;
-        }
-
-        private static int InputInventoryIndex() {
-            if (Input.GetKeyDown(KeyCode.Alpha1)) return 0;
-            if (Input.GetKeyDown(KeyCode.Alpha2)) return 1;
-            if (Input.GetKeyDown(KeyCode.Alpha3)) return 2;
-            if (Input.GetKeyDown(KeyCode.Alpha4)) return 3;
-            if (Input.GetKeyDown(KeyCode.Alpha5)) return 4;
-            return -1;
-        }
-
-
         [Command]
         private void CmdUseItem(int rId) {
-            if (UseItem(rId)) TargetUseItem(rId);
+            if (_inventory.UseItem(rId)) TargetUseItem(rId);
         }
 
         [TargetRpc]
         private void TargetUseItem(int rId) {
-            UseItem(rId);
-        }
-
-        private bool UseItem(int rId) {
-            Debug.Log("UseItem rId = " + rId);
-            var item = _inventory.Find(it => it.rId == rId);
-            if (item == null) throw new Exception("Item with rId = " + rId + " not found in inventory");
-            if (--item.count <= 0){
-                _inventory.Remove(item);
-            }
-            return true;
+            _inventory.UseItem(rId);
         }
 
         #endregion
@@ -189,7 +154,7 @@ namespace Ship {
             switch (other.tag){
                 case "barrel":
                     Debug.Log("OnCollisionEnter barrel");
-                    if (AddToInventory(0, 1)) TargetAddToInventory(0, 1);
+                    if (_inventory.AddItem(0, 1)) TargetAddToInventory(0, 1);
                     break;
             }
         }
