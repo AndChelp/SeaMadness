@@ -6,6 +6,7 @@ using Common;
 using Manager;
 using Mirror;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Ship {
     public class Ship : NetworkBehaviour, IDamageable {
@@ -123,7 +124,9 @@ namespace Ship {
             switch (other.tag){
                 case "barrel":
                     Debug.Log("OnCollisionEnter barrel");
-                    if (_inventory.AddItem(0, 1)) TargetAddToInventory(0, 1);
+                    var rId = Random.Range(0, 5);
+                    var count = Random.Range(1, 5);
+                    if (_inventory.AddItem(rId, count)) TargetAddToInventory(rId, count);
                     break;
             }
         }

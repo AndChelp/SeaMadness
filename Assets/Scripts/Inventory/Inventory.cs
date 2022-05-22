@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Common;
+using Manager;
 using UnityEngine;
 
 namespace Inventory {
@@ -18,12 +19,17 @@ namespace Inventory {
         public bool AddItem(int rId, int count) {
             Debug.Log("AddItem rId = " + rId + " count = " + count);
             var item = _inventory.Find(it => it.rId == rId);
+            Debug.Log("Found item rId = " + rId);
             if (item != null){
                 item.count += count;
+                Debug.Log("Increasing rId = " + rId + " current count = " + item.count);
+                UIManager.Instance.RefreshInventory(_inventory);
                 return BoolResult.Success;
             }
             if (_inventory.Count <= InventorySize){
                 _inventory.Add(new InventoryItem(rId, count));
+                Debug.Log("New item added to inventory rId = " + rId);
+                UIManager.Instance.RefreshInventory(_inventory);
                 return BoolResult.Success;
             }
             return BoolResult.Failure;
@@ -36,6 +42,7 @@ namespace Inventory {
             if (--item.count <= 0){
                 _inventory.Remove(item);
             }
+            UIManager.Instance.RefreshInventory(_inventory);
             return BoolResult.Success;
         }
     }
