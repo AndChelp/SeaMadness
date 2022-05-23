@@ -115,10 +115,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81f0234f47864c54b009fe12fcd0ae2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sprite: {fileID: 21300000, guid: 4d805d227bd3c594185215248aed5f27, type: 3}
+  maxCount: 0
   ownerNetId: 0
   damageAmount: 10
   cooldown: 2
-  weight: 1
   maxDistance: 130
   velocity: 36
   particles: {fileID: 216747011344538608}

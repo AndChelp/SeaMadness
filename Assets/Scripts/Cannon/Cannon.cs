@@ -41,7 +41,7 @@ namespace Cannon {
         public bool LaunchCannonball(uint netId, int cbRId) {
             if (!IsShowPredicateLine()) return BoolResult.Failure;
             //if (!(NetworkTime.time - _lastShotTime >= _currentCannonball.cooldown)) return BoolResult.Failure;
-            var cannonball = ResourceManager.Instance.GetCannonball(cbRId);
+            var cannonball = ResourceManager.Instance.GetResource<AbstractCannonball>(cbRId);
             Debug.Log("LaunchCannonball " + cannonball.GetType().Name + ", ownerId = " + netId);
             var newBall = Instantiate(cannonball, launchPointTransform.position, launchPointTransform.rotation);
             newBall.GetComponent<AbstractCannonball>().ownerNetId = netId;
@@ -137,7 +137,7 @@ namespace Cannon {
 
         public int RechargeCannonball(int cbRId) {
             currentCbRId = cbRId;
-            _currentCb = ResourceManager.Instance.GetCannonball(cbRId);
+            _currentCb = ResourceManager.Instance.GetResource<AbstractCannonball>(cbRId);
             isCharged = true;
             Debug.Log("Recharging: " + _currentCb.GetType().Name);
             return currentCbRId;

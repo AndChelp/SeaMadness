@@ -1,5 +1,6 @@
+using System;
 using System.Collections.Generic;
-using Cannon.Cannonball;
+using Common;
 using UnityEngine;
 
 namespace Manager {
@@ -9,16 +10,22 @@ namespace Manager {
         private static ResourceManager _resourceManager;
         public static ResourceManager Instance => _resourceManager;
 
-        #endregion
-
-        public List<AbstractCannonball> cannonballs;
-
         private void Awake() {
             _resourceManager = this;
         }
 
-        public AbstractCannonball GetCannonball(int id) {
-            return cannonballs[id];
+        #endregion
+
+        public List<MonoResource> resources;
+        
+        public T GetResource<T>(int id) where T : MonoResource {
+            var resource = resources[id];
+            var requiredType = typeof(T);
+            if (resource.GetType().IsInstanceOfType(requiredType)){
+                throw new Exception("Required type " + requiredType.Name + " but resource with rId = " + id +
+                                    " is " + resource.GetType().Name);
+            }
+            return (T) resource;
         }
     }
 }

@@ -2,11 +2,10 @@ using Common;
 using UnityEngine;
 
 namespace Cannon.Cannonball {
-    public abstract class AbstractCannonball : MonoBehaviour, IItem {
+    public abstract class AbstractCannonball : MonoResource {
         public uint ownerNetId;
         public int damageAmount;
         public double cooldown;
-        [SerializeField] private int maxCount;
         public int maxDistance;
         public float velocity;
         public ParticleSystem particles;
@@ -17,10 +16,6 @@ namespace Cannon.Cannonball {
             }
         }
 
-        public int maxCountProperty {
-            get => maxCount;
-            set => maxCount = value;
-        }
 
         private void OnCollisionEnter(Collision other) {
             if (!other.collider.CompareTag("ship")) return;

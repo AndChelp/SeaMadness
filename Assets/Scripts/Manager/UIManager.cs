@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cannon.Cannonball;
 using Common;
 using TMPro;
 using UnityEngine;
@@ -38,11 +39,9 @@ namespace Manager {
                 var itemTransform = Instantiate(inventoryItemSlot, inventoryContainer).GetComponent<RectTransform>();
                 itemTransform.gameObject.SetActive(true);
                 itemTransform.anchoredPosition = new Vector2(x * itemSlotWidth, 0);
-                var cannonball = ResourceManager.Instance.GetCannonball(item.rId);
-                itemTransform.Find("Name bg").Find("Name").GetComponent<TextMeshProUGUI>()
-                    .SetText(cannonball.GetType().Name[..^10]);
-                itemTransform.Find("Image bg").Find("Count").GetComponent<TextMeshProUGUI>()
-                    .SetText(item.count.ToString());
+                var cannonball = ResourceManager.Instance.GetResource<AbstractCannonball>(item.rId);
+                itemTransform.Find("Sprite").GetComponent<Image>().sprite = cannonball.sprite;
+                itemTransform.Find("Count").GetComponent<TextMeshProUGUI>().SetText(item.count.ToString());
                 x++;
             }
         }
