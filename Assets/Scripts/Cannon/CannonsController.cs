@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Common;
 using UnityEngine;
 
 namespace Cannon {
     public class CannonsController {
         private readonly List<Cannon> _cannons;
         private readonly GameObject _aim;
+
+        private Side _currentSide;
+        private int _currentCannon = 0;
 
         public CannonsController(List<Cannon> cannons, GameObject aim) {
             _cannons = cannons;

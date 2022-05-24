@@ -1,18 +1,24 @@
+using System;
 using UnityEngine;
 
 public class CameraFollowing : MonoBehaviour {
-    private Transform player;
-    public Vector3 offset;
+    public int cameraDistance = 60;
+    public int cameraHeight = 60;
+    public float rotationSpeed = 2;
+
+    private Transform _player;
 
     private void Update() {
-        if (player == null){
+        if (_player == null){
             return;
         }
-
-        transform.position = player.position + offset;
+        var newPosition = _player.transform.position + _player.transform.right * cameraDistance;
+        newPosition.y += cameraHeight;
+        transform.position = Vector3.Slerp(transform.position, newPosition, Time.deltaTime * rotationSpeed);
+        transform.LookAt(_player.transform.position);
     }
 
     public void SetPlayer(Transform player) {
-        this.player = player;
+        _player = player;
     }
 }

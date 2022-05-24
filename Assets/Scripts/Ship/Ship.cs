@@ -51,6 +51,7 @@ namespace Ship {
         private void Update() {
             if (!hasAuthority) return;
             if (!Physics.Raycast(_camera.ScreenPointToRay(Input.mousePosition), out var hitInfo)) return;
+            
             _cannonsController.RotateTo(hitInfo.point);
             ShotInput();
             RechargeInput(hitInfo.point);
