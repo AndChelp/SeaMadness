@@ -51,10 +51,27 @@ namespace Ship {
         private void Update() {
             if (!hasAuthority) return;
             if (!Physics.Raycast(_camera.ScreenPointToRay(Input.mousePosition), out var hitInfo)) return;
-            
+
             _cannonsController.RotateTo(hitInfo.point);
             ShotInput();
             RechargeInput(hitInfo.point);
+            SelectCannonInput(hitInfo.point);
+        }
+
+        private int a = 0;
+        private void SelectCannonInput(Vector3 point) {
+            var scrollDeltaY = Input.mouseScrollDelta.y;
+            if (scrollDeltaY == 0) return;
+            var side = ShipSideInput(point);
+            a += (int)scrollDeltaY % 3;
+            Debug.Log(a);
+        }
+
+        //todo переделать
+        private Side ShipSideInput(Vector3 point) {
+            var direction = (point - transform.position).normalized;
+            var angle = Quaternion.Angle(transform.rotation, Quaternion.LookRotation(direction));
+            return angle <= 90 ? Side.Right : Side.Left;
         }
 
         #region Shooting

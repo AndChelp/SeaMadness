@@ -10,11 +10,16 @@ namespace Cannon {
         private readonly GameObject _aim;
 
         private Side _currentSide;
-        private int _currentCannon = 0;
+        private int _activeCannon = 0;
+        private Side _activeSide = Side.Left;
 
         public CannonsController(List<Cannon> cannons, GameObject aim) {
             _cannons = cannons;
             _aim = aim;
+        }
+
+        public void SetActiveCannon(int index, Side side) {
+            // _cannons.Count
         }
 
         public void RotateTo(Vector3 point) {
