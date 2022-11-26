@@ -10,20 +10,72 @@ using Random = UnityEngine.Random;
 
 namespace Ship {
     public class Ship : NetworkBehaviour, IDamageable {
-        private Inventory.Inventory _inventory;
-        private Camera _camera;
-        private Rigidbody _rb;
-        [SyncVar] private int _currentHealth = 100;
-
         public float acceleration = 1500f;
-
-        private CannonsController _cannonsController;
         public List<Cannon.Cannon> cannons;
         public GameObject aim;
+        Camera _camera;
+
+        CannonsController _cannonsController;
+        [SyncVar]
+        int _currentHealth = 100;
+
+        Inventory.Inventory _inventory;
+        Rigidbody _rb;
+
+        int a;
+
+        void Update() {
+            if (!hasAuthority) return;
+            if (!Physics.Raycast(_camera.ScreenPointToRay(Input.mousePosition), out var hitInfo)) return;
+            _cannonsController.CurrentSide = ShipSideInput(hitInfo.point);
+            _cannonsController.RotateTo(hitInfo.point);
+            _inventory.SelectSlotInput();
+            ShotInput();
+            RechargeInput();
+            SelectCannonForRechargeInput();
+        }
+
+        void FixedUpdate() {
+            if (!hasAuthority) return;
+            var vertical = Input.GetAxis("Vertical");
+            var horizontal = Input.GetAxis("Horizontal");
+            _rb.AddForce(-transform.right * (vertical * acceleration * Time.fixedDeltaTime), ForceMode.Acceleration);
+            var torqueVelocity = Math.Sign(vertical) * horizontal * _rb.velocity.magnitude;
+            _rb.AddTorque(new Vector3(0, torqueVelocity, 0), ForceMode.Acceleration);
+        }
+        void SelectCannonForRechargeInput() {
+            var scrollDeltaY = Input.mouseScrollDelta.y;
+            if (scrollDeltaY == 0) return;
+            _cannonsController.SetCannonForRecharge((int) scrollDeltaY % 2);
+        }
+
+        //todo переделать
+        Side ShipSideInput(Vector3 point) {
+            var direction = (point - transform.position).normalized;
+            var angle = Quaternion.Angle(transform.rotation, Quaternion.LookRotation(direction));
+            return angle <= 90 ? Side.Right : Side.Left;
+        }
+
+        #region Charging
+
+        void RechargeInput() {
+            if (!Input.GetKeyDown(KeyCode.R)) return;
+
+            var cannon = _cannonsController.GetCannonForRecharge();
+            var item = _inventory.SelectedItem();
+            if (item == null) return;
+            if (cannon.isCharged) {
+                Debug.Log("Cannon was charged, calling discharge");
+                CmdAddToInventory(cannon.DischargeCannonball(), 1);
+            }
+            CmdUseItem(cannon.RechargeCannonball(item.rId));
+        }
+
+        #endregion
 
         #region Initialization
 
-        private void Awake() {
+        void Awake() {
             _camera = Camera.main;
             _rb = transform.GetComponent<Rigidbody>();
             _inventory = new Inventory.Inventory();
@@ -39,72 +91,21 @@ namespace Ship {
 
         #endregion
 
-        private void FixedUpdate() {
-            if (!hasAuthority) return;
-            var vertical = Input.GetAxis("Vertical");
-            var horizontal = Input.GetAxis("Horizontal");
-            _rb.AddForce(-transform.right * (vertical * acceleration * Time.fixedDeltaTime), ForceMode.Acceleration);
-            var torqueVelocity = Math.Sign(vertical) * horizontal * _rb.velocity.magnitude;
-            _rb.AddTorque(new Vector3(0, torqueVelocity, 0), ForceMode.Acceleration);
-        }
-
-        private void Update() {
-            if (!hasAuthority) return;
-            if (!Physics.Raycast(_camera.ScreenPointToRay(Input.mousePosition), out var hitInfo)) return;
-
-            _cannonsController.RotateTo(hitInfo.point);
-            ShotInput();
-            RechargeInput(hitInfo.point);
-            SelectCannonInput(hitInfo.point);
-        }
-
-        private int a = 0;
-        private void SelectCannonInput(Vector3 point) {
-            var scrollDeltaY = Input.mouseScrollDelta.y;
-            if (scrollDeltaY == 0) return;
-            var side = ShipSideInput(point);
-            a += (int)scrollDeltaY % 3;
-            Debug.Log(a);
-        }
-
-        //todo переделать
-        private Side ShipSideInput(Vector3 point) {
-            var direction = (point - transform.position).normalized;
-            var angle = Quaternion.Angle(transform.rotation, Quaternion.LookRotation(direction));
-            return angle <= 90 ? Side.Right : Side.Left;
-        }
-
         #region Shooting
 
-        private void ShotInput() {
+        void ShotInput() {
             if (!Input.GetMouseButtonDown(0)) return;
             _cannonsController.ForEachActive((index, cannon) => CmdCannonFire(index, cannon.currentCbRId));
         }
 
         [Command]
-        private void CmdCannonFire(int cannonIndex, int cbRId) {
+        void CmdCannonFire(int cannonIndex, int cbRId) {
             if (_cannonsController.Fire(netId, cannonIndex, cbRId)) RpcCannonFire(cannonIndex, cbRId);
         }
 
         [ClientRpc]
-        private void RpcCannonFire(int cannonIndex, int cbRId) {
+        void RpcCannonFire(int cannonIndex, int cbRId) {
             if (!isServer) _cannonsController.Fire(netId, cannonIndex, cbRId);
-        }
-
-        #endregion
-
-        #region Charging
-
-        private void RechargeInput(Vector3 point) {
-            var cannon = _cannonsController.AccessibleCannon(point);
-            if (cannon == null) return;
-            var item = _inventory.SelectedItemInput();
-            if (item == null) return;
-            if (cannon.isCharged){
-                Debug.Log("Cannon was charged, calling discharge");
-                CmdAddToInventory(cannon.DischargeCannonball(), 1);
-            }
-            CmdUseItem(cannon.RechargeCannonball(item.rId));
         }
 
         #endregion
@@ -112,24 +113,24 @@ namespace Ship {
         #region Inventory
 
         [Command]
-        private void CmdAddToInventory(int rId, int count) {
+        void CmdAddToInventory(int rId, int count) {
             Debug.Log("CmdAddToInventory rId = " + rId + " count = " + count);
             if (_inventory.AddItem(rId, count)) TargetAddToInventory(rId, count);
         }
 
         [TargetRpc]
-        private void TargetAddToInventory(int rId, int count) {
+        void TargetAddToInventory(int rId, int count) {
             Debug.Log("TargetAddToInventory rId = " + rId + " count = " + count);
             if (!isServer) _inventory.AddItem(rId, count);
         }
 
         [Command]
-        private void CmdUseItem(int rId) {
+        void CmdUseItem(int rId) {
             if (_inventory.UseItem(rId)) TargetUseItem(rId);
         }
 
         [TargetRpc]
-        private void TargetUseItem(int rId) {
+        void TargetUseItem(int rId) {
             if (!isServer) _inventory.UseItem(rId);
         }
 
@@ -138,8 +139,8 @@ namespace Ship {
         #region Collisions
 
         [ServerCallback]
-        private void OnTriggerEnter(Collider other) {
-            switch (other.tag){
+        void OnTriggerEnter(Collider other) {
+            switch (other.tag) {
                 case "barrel":
                     Debug.Log("OnCollisionEnter barrel");
                     var rId = Random.Range(0, 5);
@@ -150,8 +151,8 @@ namespace Ship {
         }
 
         [ServerCallback]
-        private void OnCollisionEnter(Collision other) {
-            switch (other.collider.tag){
+        void OnCollisionEnter(Collision other) {
+            switch (other.collider.tag) {
                 case "shell":
                     Debug.Log("OnCollisionEnter shell");
                     var cannonball = other.collider.GetComponent<AbstractCannonball>();
@@ -168,13 +169,13 @@ namespace Ship {
         public void TakeDamage(int amount) {
             var currentHealth = _currentHealth -= amount;
             TargetUpdateHealth(currentHealth);
-            if (amount >= 0 && currentHealth <= 0){
+            if (amount >= 0 && currentHealth <= 0) {
                 Die();
             }
         }
 
         [TargetRpc]
-        private void TargetUpdateHealth(int healthValue) {
+        void TargetUpdateHealth(int healthValue) {
             UIManager.Instance.SetHealth(healthValue);
         }
 

@@ -7,13 +7,8 @@ using UnityEngine;
 namespace Cannon {
     [RequireComponent(typeof(LineRenderer))]
     public class Cannon : MonoBehaviour {
-        private const float MaxRotationAngle = 60f;
-        private const float RotationSpeed = 10f;
-
-        private LineRenderer _lineRenderer;
-
-        private float _g = 9.81f;
-        private double _lastShotTime;
+        const float MaxRotationAngle = 60f;
+        const float RotationSpeed = 10f;
 
 
         public Transform shipTransform;
@@ -23,15 +18,20 @@ namespace Cannon {
         public Side side;
         public float minAimDistance = 10f;
 
-        private Rigidbody _shipRb;
+        public bool isCharged;
+        AbstractCannonball _currentCb;
 
-        private Quaternion _initRotation;
-        private AbstractCannonball _currentCb;
+        float _g = 9.81f;
+
+        Quaternion _initRotation;
+        double _lastShotTime;
+
+        LineRenderer _lineRenderer;
+
+        Rigidbody _shipRb;
         public int currentCbRId { get; private set; }
 
-        public bool isCharged;
-
-        private void Awake() {
+        void Awake() {
             _shipRb = shipTransform.GetComponent<Rigidbody>();
             _lineRenderer = GetComponent<LineRenderer>();
             _g = -Physics.gravity.y;
@@ -63,13 +63,11 @@ namespace Cannon {
             _lineRenderer.enabled = showPredicate;
         }
 
-        public bool IsShowPredicateLine() {
-            return _lineRenderer.enabled;
-        }
+        public bool IsShowPredicateLine() => _lineRenderer.enabled;
 
         public bool IsInDiapason(Vector3 point) {
             var distance = Vector3.Distance(point, transform.position);
-            if (distance < minAimDistance){
+            if (distance < minAimDistance) {
                 return BoolResult.Failure;
             }
 
@@ -79,7 +77,7 @@ namespace Cannon {
         }
 
         public bool CanAim(Vector3 point) {
-            if (!isCharged){
+            if (!isCharged) {
                 return BoolResult.Failure;
             }
 
@@ -90,7 +88,7 @@ namespace Cannon {
             return ByAngle(direction);
         }
 
-        private bool ByAngle(Vector3 direction) {
+        bool ByAngle(Vector3 direction) {
             var angle = Quaternion.Angle(shipTransform.rotation * _initRotation, Quaternion.LookRotation(direction));
             return angle < MaxRotationAngle;
         }
@@ -112,10 +110,10 @@ namespace Cannon {
             Turn(direction, sinTheta);
         }
 
-        private void DrawPredicate(float cosTheta, float sinTheta, Vector3 direction, Vector3 launchPosition,
+        void DrawPredicate(float cosTheta, float sinTheta, Vector3 direction, Vector3 launchPosition,
             Vector3 targetPosition) {
             _lineRenderer.positionCount = (int) (Vector3.Distance(targetPosition, launchPosition) * 0.2f);
-            for (var i = 0; i < _lineRenderer.positionCount; i++){
+            for (var i = 0; i < _lineRenderer.positionCount; i++) {
                 var t = i / 10f;
                 var dx = _currentCb.velocity * cosTheta * t;
                 var dy = _currentCb.velocity * sinTheta * t - 0.5f * _g * t * t;
@@ -124,7 +122,7 @@ namespace Cannon {
             }
         }
 
-        private void Turn(Vector3 direction, float angle) {
+        void Turn(Vector3 direction, float angle) {
             var lookRotation = Quaternion.LookRotation(direction) *
                                Quaternion.AngleAxis(angle * Mathf.Rad2Deg, Vector3.left);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, lookRotation, RotationSpeed);

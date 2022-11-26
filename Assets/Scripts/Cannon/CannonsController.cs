@@ -1,58 +1,69 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Common;
+using Manager;
 using UnityEngine;
 
 namespace Cannon {
     public class CannonsController {
-        private readonly List<Cannon> _cannons;
-        private readonly GameObject _aim;
+        readonly GameObject _aim;
+        readonly List<Cannon> _leftCannons;
+        readonly List<Cannon> _rightCannons;
+        int _leftActiveCannon;
+        int _rightActiveCannon;
 
-        private Side _currentSide;
-        private int _activeCannon = 0;
-        private Side _activeSide = Side.Left;
 
         public CannonsController(List<Cannon> cannons, GameObject aim) {
-            _cannons = cannons;
+            _leftCannons = cannons.FindAll(it => it.side == Side.Left);
+            _rightCannons = cannons.FindAll(it => it.side == Side.Right);
             _aim = aim;
         }
+        public Side CurrentSide { get; set; }
 
-        public void SetActiveCannon(int index, Side side) {
-            // _cannons.Count
+        List<Cannon> CannonsBySide(Side side) => Side.Left == side ? _leftCannons : _rightCannons;
+
+        int CannonIndexBySide(Side side) => Side.Left == side ? _leftActiveCannon : _rightActiveCannon;
+
+        public void SetCannonForRecharge(int delta) {
+            if (Side.Left == CurrentSide && (delta == 1 && _leftActiveCannon == 0 || delta == -1 && _leftActiveCannon == 1)) {
+                _leftActiveCannon += delta;
+                UIManager.Instance.SelectCannon(CurrentSide, _leftActiveCannon);
+                Debug.Log(CurrentSide + " " + _leftActiveCannon + " " + _rightActiveCannon);
+            } else if (Side.Right == CurrentSide && delta == 1 && _rightActiveCannon == 0 || delta == -1 && _rightActiveCannon == 1) {
+                _rightActiveCannon += delta;
+                UIManager.Instance.SelectCannon(CurrentSide, _rightActiveCannon);
+                Debug.Log(CurrentSide + " " + _leftActiveCannon + " " + _rightActiveCannon);
+            }
         }
 
         public void RotateTo(Vector3 point) {
             var anyCanAim = false;
-            foreach (var cannon in _cannons){
-                if (cannon.CanAim(point)){
+            foreach (var cannon in CannonsBySide(CurrentSide)) {
+                if (cannon.CanAim(point)) {
                     anyCanAim = true;
                     cannon.Aim(point);
                     cannon.ShowPredicateLine(true);
-                } else{
+                } else {
                     cannon.ShowPredicateLine(false);
                 }
             }
 
-            if (anyCanAim){
+            if (anyCanAim) {
                 _aim.SetActive(true);
                 _aim.transform.position = point;
-            } else{
+            } else {
                 _aim.SetActive(false);
             }
         }
 
-        public bool Fire(uint netId, int cannonIndex, int cbRId) {
-            return _cannons[cannonIndex].LaunchCannonball(netId, cbRId);
-        }
+        public bool Fire(uint netId, int cannonIndex, int cbRId) => CannonsBySide(CurrentSide)[cannonIndex].LaunchCannonball(netId, cbRId);
 
-        public Cannon AccessibleCannon(Vector3 point) {
-            return _cannons.FirstOrDefault(it => it.IsInDiapason(point));
-        }
+        public Cannon GetCannonForRecharge() => CannonsBySide(CurrentSide)[CannonIndexBySide(CurrentSide)];
 
         public void ForEachActive(Action<int, Cannon> action) {
-            for (var cannonIndex = 0; cannonIndex < _cannons.Count; cannonIndex++){
-                var cannon = _cannons[cannonIndex];
+            var cannons = CannonsBySide(CurrentSide);
+            for (var cannonIndex = 0; cannonIndex < cannons.Count; cannonIndex++) {
+                var cannon = cannons[cannonIndex];
                 if (!cannon.IsShowPredicateLine()) continue;
                 action.Invoke(cannonIndex, cannon);
             }

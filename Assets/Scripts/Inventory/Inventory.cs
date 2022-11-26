@@ -6,27 +6,31 @@ using UnityEngine;
 
 namespace Inventory {
     public class Inventory {
-        private const int InventorySize = 5;
+        const int InventorySize = 5;
 
-        private readonly List<InventoryItem> _inventory = new();
+        readonly List<InventoryItem> _inventory = new List<InventoryItem>();
+        int _selectedSlot;
 
-        public InventoryItem SelectedItemInput() {
+        public void SelectSlotInput() {
             var inventoryIndex = InventoryInput.SelectedIndex();
-            if (inventoryIndex == -1 || _inventory.Count <= inventoryIndex) return null;
-            return _inventory[inventoryIndex];
+            if (inventoryIndex == -1) return;
+            _selectedSlot = inventoryIndex;
+            UIManager.Instance.SelectSlot(_selectedSlot);
         }
+
+        public InventoryItem SelectedItem() => _inventory.Count - 1 < _selectedSlot ? null : _inventory[_selectedSlot];
 
         public bool AddItem(int rId, int count) {
             Debug.Log("AddItem rId = " + rId + " count = " + count);
             var item = _inventory.Find(it => it.rId == rId);
             Debug.Log("Found item rId = " + rId);
-            if (item != null){
+            if (item != null) {
                 item.count += count;
                 Debug.Log("Increasing rId = " + rId + " current count = " + item.count);
                 UIManager.Instance.RefreshInventory(_inventory);
                 return BoolResult.Success;
             }
-            if (_inventory.Count <= InventorySize){
+            if (_inventory.Count <= InventorySize) {
                 _inventory.Add(new InventoryItem(rId, count));
                 Debug.Log("New item added to inventory rId = " + rId);
                 UIManager.Instance.RefreshInventory(_inventory);
@@ -39,7 +43,7 @@ namespace Inventory {
             Debug.Log("UseItem rId = " + rId);
             var item = _inventory.Find(it => it.rId == rId);
             if (item == null) throw new Exception("Item with rId = " + rId + " not found in inventory");
-            if (--item.count <= 0){
+            if (--item.count <= 0) {
                 _inventory.Remove(item);
             }
             UIManager.Instance.RefreshInventory(_inventory);

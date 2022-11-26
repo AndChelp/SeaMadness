@@ -10,14 +10,14 @@ namespace Cannon.Cannonball {
         public float velocity;
         public ParticleSystem particles;
 
-        private void FixedUpdate() {
-            if (transform.position.y < -3){
+        void FixedUpdate() {
+            if (transform.position.y < -3) {
                 Destroy(gameObject);
             }
         }
 
 
-        private void OnCollisionEnter(Collision other) {
+        void OnCollisionEnter(Collision other) {
             if (!other.collider.CompareTag("ship")) return;
             Debug.Log("Cannonball collided with a ship");
             PlayExplosion(other.gameObject);

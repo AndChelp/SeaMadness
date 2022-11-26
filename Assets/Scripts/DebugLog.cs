@@ -2,30 +2,26 @@ using UnityEngine;
 
 namespace DefaultNamespace {
     public class DebugLog : MonoBehaviour {
-        private string _myLog = "*begin log";
-        private bool _doShow = false;
-        private Vector2 _scrollPosition = new(0, 0);
+        bool _doShow;
+        string _myLog = "*begin log";
+        Vector2 _scrollPosition = new Vector2(0, 0);
 
-        private void OnEnable() {
-            Application.logMessageReceived += Log;
-        }
-
-        private void OnDisable() {
-            Application.logMessageReceived -= Log;
-        }
-
-        private void Update() {
-            if (Input.GetKeyDown(KeyCode.Space)){
+        void Update() {
+            if (Input.GetKeyDown(KeyCode.Space)) {
                 _doShow = !_doShow;
             }
         }
 
-        private void Log(string logString, string stackTrace, LogType type) {
-            _myLog = _myLog + "\n" + logString;
+        void OnEnable() {
+            Application.logMessageReceived += Log;
         }
 
-        private void OnGUI() {
-            if (!_doShow){
+        void OnDisable() {
+            Application.logMessageReceived -= Log;
+        }
+
+        void OnGUI() {
+            if (!_doShow) {
                 return;
             }
             var width = Screen.width / 2.0f;
@@ -36,6 +32,10 @@ namespace DefaultNamespace {
             GUILayout.TextArea(_myLog, GUILayout.ExpandHeight(true));
             GUILayout.EndScrollView();
             GUILayout.EndArea();
+        }
+
+        void Log(string logString, string stackTrace, LogType type) {
+            _myLog = _myLog + "\n" + logString;
         }
     }
 }

@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Ship {
     public class Float : MonoBehaviour {
-        private LowPolyWater.LowPolyWater _water;
         public Rigidbody rb;
 
         public float maxDepth = 1f;
@@ -10,12 +9,13 @@ namespace Ship {
         public float floatCount = 1f;
         public float waterDrag = 1f;
         public float waterAngularDrag = 1f;
+        LowPolyWater.LowPolyWater _water;
 
-        private void Awake() {
+        void Awake() {
             _water = FindObjectOfType<LowPolyWater.LowPolyWater>();
         }
 
-        private void FixedUpdate() {
+        void FixedUpdate() {
             var position = transform.position;
             rb.AddForceAtPosition(Physics.gravity / floatCount, position, ForceMode.Acceleration);
             var waveYAt = _water.GetWaveYAt(position);
